@@ -2,8 +2,8 @@ import { IsDate, IsString } from "class-validator";
 
 export default class EventCreationDto {
     @IsString()
-    event_type: string;
+    event_type!: string;
 
     @IsDate()
-    created_at: Date;
+    created_at!: Date;
 }
