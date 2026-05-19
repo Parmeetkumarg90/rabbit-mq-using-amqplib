@@ -19,9 +19,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migration:generate": "npx typeorm migration:generate -d dist/src/infrastructure/database/database-datasource.js src/infrastructure/database/migrations/InitMigration",
-    "migration:run": "npx typeorm migration:run -d dist/src/infrastructure/database/database-datasource.js",
-    "migration:revert": "npx typeorm migration:revert -d dist/src/infrastructure/database/database-datasource.js",
+    "migration:generate": "npx typeorm migration:generate -d dist/infrastructure/database/database-datasource.js src/infrastructure/database/migrations/InitMigration",
+    "migration:run": "npx typeorm migration:run -d dist/infrastructure/database/database-datasource.js",
+    "migration:revert": "npx typeorm migration:revert -d dist/infrastructure/database/database-datasource.js",
     "seed": "ts-node -r tsconfig-paths/register src/infrastructure/database/seeder.ts",
     "seed:prod": "node dist/infrastructure/database/seeder.js"
   },
