@@ -17,6 +17,11 @@ const dataSource = new DataSource({
   migrationsTableName: 'migrations',
   migrations: ['dist/infrastructure/database/migrations/*{.ts,.js}'],
   synchronize: false,
+  logging: true,
+  ssl: {
+    ca: process.env.POSTGRES_CA,
+    rejectUnauthorized: true,
+  },
 });
 
 export default dataSource;

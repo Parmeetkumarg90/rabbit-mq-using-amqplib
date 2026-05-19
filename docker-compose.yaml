@@ -18,7 +18,7 @@ services:
     env_file:
       - ./consumer/.env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - rmq_pg_data:/var/lib/postgresql/data
 
   producer:
     build:
@@ -45,5 +45,5 @@ services:
       - ./consumer/.env
 
 volumes:
-  pg_data: {}
+  rmq_pg_data: {}
   rmq_data: {}
