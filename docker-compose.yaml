@@ -8,7 +8,7 @@ services:
       - "15672:15672"
     restart: always
     volumes:
-      - rmq_data:/var/lib/rabbitmq/data
+      - rmq_data:/var/lib/rabbitmq
 
   database:
     image: postgres:14-alpine
@@ -20,17 +20,33 @@ services:
     volumes:
       - rmq_pg_data:/var/lib/postgresql/data
 
+  pgAdmin:
+    image: dpage/pgadmin4
+    ports:
+      - "3002:80"
+    restart: "always"
+    depends_on:
+      - database
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    volumes:
+      - rmq_pgadmin_data:/var/lib/pgadmin
+
   producer:
     build:
       context: ./producer
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
-    command: sh -c "npm run build && npm run migration:run && npm run start:dev"
     depends_on:
       - database
+    stdin_open: true
+    tty: true
     env_file:
       - ./producer/.env
+    volumes:
+      - ./producer/:/src
 
   consumer:
     build:
@@ -38,12 +54,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    command: sh -c "npm run build && npm run start:dev"
     depends_on:
       - database
+    stdin_open: true
+    tty: true
     env_file:
       - ./consumer/.env
+    volumes:
+      - ./consumer/:/src
 
 volumes:
   rmq_pg_data: {}
   rmq_data: {}
+  rmq_pgadmin_data: {}
