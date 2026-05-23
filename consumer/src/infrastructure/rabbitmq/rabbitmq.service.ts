@@ -3,8 +3,8 @@ import * as amqplib from "amqplib";
 
 @Injectable()
 export default class RabbitMqService implements OnModuleInit, OnModuleDestroy {
-    private connection: amqplib.ChannelModel;
-    private channel: amqplib.Channel | null;
+    private connection!: amqplib.ChannelModel;
+    private channel!: amqplib.Channel | null;
     private readonly eventDeadLetterExchange = process.env?.EVENT_DEAD_LETTER_EXCHANGE_NAME ?? "event_dead_letter_exchange";
     private readonly eventDeadLetterQueue = process.env?.EVENT_DEAD_LETTER_QUEUE_NAME ?? "event_dead_letter_queue";
     private readonly eventQueue = process.env?.EVENT_QUEUE_NAME ?? "event_queue";

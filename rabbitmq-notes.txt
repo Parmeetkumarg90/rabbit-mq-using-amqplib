@@ -1,0 +1,529 @@
+# RabbitMQ Notes
+
+# 1. RabbitMQ
+
+## What is RabbitMQ?
+
+RabbitMQ is a message broker that helps services talk to each other asynchronously.
+
+Instead of this:
+
+Service A -> Service B
+
+You usually do this:
+
+Service A -> RabbitMQ -> Service B
+
+So RabbitMQ sits in the middle and helps producers and consumers communicate without being tightly connected.
+
+---
+
+## Why use RabbitMQ?
+
+RabbitMQ is useful for:
+
+* Microservices communication
+* Background jobs
+* Event-driven systems
+* Async processing
+* Scaling services
+* Retry handling
+* Decoupling applications
+
+---
+
+## How RabbitMQ works
+
+Basic flow:
+
+Producer -> Exchange -> Queue -> Consumer
+
+In simple words:
+
+* Producer sends the message
+* Exchange decides where it should go
+* Queue stores the message
+* Consumer reads and processes it
+
+---
+
+# 2. Core Components
+
+## Producer
+
+The producer is the application that sends messages.
+
+Example: an Order Service publishes `order.created`.
+
+---
+
+## Exchange
+
+The exchange receives messages and routes them to the right queue.
+
+Important point: an exchange does not store messages.
+
+The queue is the place where messages actually wait.
+
+---
+
+## Queue
+
+A queue stores messages until a consumer processes them.
+
+---
+
+## Consumer
+
+A consumer reads messages from a queue.
+
+Consumers do not read directly from exchanges.
+
+---
+
+## Routing Key
+
+A routing key is the rule used to decide where a message should go.
+
+Examples:
+
+```txt
+user.created
+payment.success
+order.created
+```
+
+---
+
+## Binding
+
+Binding is the connection between an exchange and a queue.
+
+Example:
+
+```js
+channel.bindQueue(
+  "email.queue",
+  "notification.exchange",
+  "user.created"
+)
+```
+
+Meaning:
+If the routing key is `user.created`, send the message to `email.queue`.
+
+---
+
+# 3. Exchange Types
+
+## Direct Exchange
+
+A direct exchange routes messages using an exact routing key match.
+
+### Example
+
+Binding:
+
+```txt
+email.queue -> user.created
+```
+
+Publish:
+
+```txt
+routing key = user.created
+```
+
+Result:
+Only `email.queue` receives the message.
+
+### Real-world example
+
+Notification systems often use this:
+
+* sms.queue -> sms
+* email.queue -> email
+
+### Interview questions
+
+Q. When should a Direct Exchange be used?
+A. When you need exact routing.
+
+Q. Does Direct Exchange support patterns?
+A. No.
+
+---
+
+## Topic Exchange
+
+A topic exchange routes messages using patterns.
+
+Special characters:
+
+* `*` means one word
+* `#` means multiple words
+
+### Example
+
+Bindings:
+
+```txt
+payment.*
+order.#
+```
+
+Messages:
+
+```txt
+payment.success
+payment.failed
+order.created
+order.payment.failed
+```
+
+### Real-world example
+
+Microservice events such as:
+
+* order.created
+* order.updated
+* payment.success
+
+### Interview questions
+
+Q. What is the difference between Direct and Topic Exchange?
+A. Direct uses exact match, while Topic uses pattern matching.
+
+Q. What does `*` mean?
+A. It matches one word.
+
+Q. What does `#` mean?
+A. It matches multiple words.
+
+---
+
+## Fanout Exchange
+
+A fanout exchange broadcasts the message to all queues.
+
+Routing key is ignored.
+
+### Example
+
+Message:
+
+```txt
+system.shutdown
+```
+
+All queues receive the message.
+
+### Real-world example
+
+* Live notifications
+* Chat systems
+* Real-time dashboards
+
+### Interview questions
+
+Q. Does Fanout use a routing key?
+A. No.
+
+Q. What is the main use of Fanout?
+A. Broadcasting.
+
+---
+
+## Headers Exchange
+
+A headers exchange uses message headers instead of routing keys.
+
+It is not used very often.
+
+### Example
+
+```txt
+department = finance
+```
+
+### Real-world example
+
+Complex filtering systems.
+
+### Interview questions
+
+Q. Why is it less popular?
+A. It is more complex and slower than other exchange types.
+
+---
+
+# 4. Queue
+
+A queue stores messages until they are processed.
+
+---
+
+## Durable Queue
+
+A durable queue survives a RabbitMQ restart.
+
+For reliability, you usually need both:
+
+* Durable queue
+* Persistent message
+
+---
+
+## Dead Letter Queue (DLQ)
+
+A dead letter queue stores messages that failed processing.
+
+### Real-world example
+
+If a payment keeps failing even after retries, the message can go to:
+
+```txt
+payment.dlq
+```
+
+### Interview questions
+
+Q. Why use a DLQ?
+A. To separate failed messages from the main flow.
+
+---
+
+## Priority Queue
+
+A priority queue processes high-priority messages first.
+
+### Real-world example
+
+VIP orders.
+
+---
+
+# 5. Consumers
+
+A consumer processes messages from a queue.
+
+Flow:
+
+```txt
+Queue -> Consumer
+```
+
+---
+
+## Multiple Consumers
+
+You can have multiple consumers on the same queue.
+
+Example:
+
+```txt
+email.queue
+ ├── consumer-1
+ ├── consumer-2
+ └── consumer-3
+```
+
+RabbitMQ distributes messages in round-robin style.
+
+This is called the Competing Consumer Pattern.
+
+### Benefits
+
+* Load balancing
+* Horizontal scaling
+* Faster processing
+
+### Interview questions
+
+Q. Can multiple consumers consume the same queue?
+A. Yes.
+
+Q. Will every consumer receive the same message?
+A. No. RabbitMQ distributes the messages.
+
+---
+
+# 6. ACK (Acknowledgement)
+
+An ACK is the consumer telling RabbitMQ that the message was processed successfully.
+
+If there is no ACK, the message may be lost.
+
+If the consumer crashes before sending an ACK, RabbitMQ can requeue the message.
+
+### Interview questions
+
+Q. Why is ACK important?
+A. It helps ensure reliable processing.
+
+---
+
+# 7. Prefetch
+
+Prefetch controls how many messages a consumer can receive at once.
+
+Example:
+
+```js
+channel.prefetch(1)
+```
+
+This means the consumer gets one message at a time.
+
+### Benefits
+
+* Prevents overload
+* Improves load balancing
+
+---
+
+# 8. Publisher Confirm
+
+Publisher confirm lets the producer know that RabbitMQ has received the message.
+
+It is used for reliable publishing.
+
+---
+
+# 9. Message Persistence
+
+Message persistence helps messages survive a restart.
+
+You need both:
+
+1. Durable queue
+2. Persistent message
+
+---
+
+# 10. Retry Pattern
+
+The retry pattern means failed messages are tried again after a delay.
+
+### Real-world example
+
+If a payment gateway times out, you might retry:
+
+* After 5 seconds
+* After 30 seconds
+* After 2 minutes
+
+---
+
+# 11. Outbox Pattern
+
+The outbox pattern helps keep the database and RabbitMQ in sync.
+
+## Problem
+
+The database is saved, but RabbitMQ publish fails.
+
+That creates inconsistency.
+
+## Solution
+
+1. Save the event in an outbox table
+2. A worker publishes the message
+3. Mark the event as processed
+
+This makes the architecture much more reliable.
+
+---
+
+# 12. Idempotency
+
+Idempotency means the same message can be processed safely more than once.
+
+This matters because RabbitMQ may redeliver messages.
+
+### Real-world example
+
+It helps prevent duplicate payments.
+
+---
+
+# 13. Common Interview Questions
+
+Q. What is the difference between Kafka and RabbitMQ?
+
+RabbitMQ:
+
+* Task queues
+* Complex routing
+* Low latency
+
+Kafka:
+
+* Event streaming
+* High throughput
+* Big data systems
+
+---
+
+Q. What is the difference between a queue and an exchange?
+
+Exchange:
+Routes messages
+
+Queue:
+Stores messages
+
+---
+
+Q. Can one queue bind to multiple exchanges?
+A. Yes.
+
+Q. Can one exchange bind to multiple queues?
+A. Yes.
+
+Q. What is a routing key?
+A. It is the rule used for message routing.
+
+Q. Can RabbitMQ guarantee exactly-once delivery?
+A. No. It usually provides at-least-once delivery.
+
+Q. What is the competing consumer pattern?
+A. Multiple consumers processing the same queue.
+
+Q. What is dead lettering?
+A. Moving failed messages to a DLQ.
+
+---
+
+# 14. Best Practices
+
+* Use Topic Exchange in microservices
+* Use a DLQ
+* Use ACKs
+* Use retries
+* Use durable queues
+* Use idempotent consumers
+* Use prefetch
+* Monitor queue size
+* Use the outbox pattern
+
+---
+
+# 15. Final Mental Model
+
+```txt
+Producer
+   ↓
+Exchange
+   ↓
+Binding
+   ↓
+Queue
+   ↓
+Consumer
+```
+
+Exchange = Router
+Queue = Storage
+Consumer = Worker
+Routing Key = Rule
