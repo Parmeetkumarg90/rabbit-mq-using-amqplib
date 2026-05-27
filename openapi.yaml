@@ -1,0 +1,40 @@
+openapi: 3.0.0
+info:
+  title: Rabbitmq Api Documentation
+  version: 1.0.0
+  description: I am creating this for understanding how we document a project or task, which help use to manage our project with new feature implementation through this documentation and making structure project.
+
+tags:
+  - name: Consumer
+    description: All Api's related to consumer service
+
+  - name: Producer
+    description: All Api's related to producer service
+
+paths:
+  /product:
+    post:
+      summary: Api for creating a product and starting functionality
+      tags:
+        - Producer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_name]
+              properties:
+                product_name:
+                  type: string
+      responses:
+        "200":
+          description: Product Create Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product Created Successfully
